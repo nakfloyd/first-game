@@ -1,0 +1,1305 @@
+
+//Main Variables
+var TIME_OF_GAME = 33; // 3 seconds for startup
+var MONSTER_NUM = 9;
+var MONSTER_SPEED = 3; // 3 - slow, 5 - medium, 8 - fast
+var NUM_OF_TREES = 7;
+var carSpeed = 1; // start speed of car
+
+
+
+var w = getWidth();
+var h = getHeight();
+var moonColor = false;
+var canMove = false;
+var moveX = w/2;
+var turnDir;
+var longPressHandler = 1;
+var leftOrRightPressed = false;
+var distShow = 0;
+
+var LIGHT_RADIUS = 50;
+var BACKGROUND_COLOR = "#152238";
+var BACKGROUND_COLOR_ALT = "#152238"; //"#4F6988";
+var FLASHLIGHT_COLOR = "#FFFF66";
+var MOON_COLOR = "#FDFAF6";
+var MOON_COLOR_ALT = "#ADD8E6";
+var MOON_CRATER_COLOR = "#A0A2A5";
+var MOON_CRATER_SHADE_COLOR = "#D0D2D5";
+
+var MOON_RADIUS = 60;
+var CRATER_RADIUS = MOON_RADIUS/5;
+
+var TIMER_ITERATION = 190;
+
+//monsrter vars
+var monsterColor = [], monsterCanMove =[] , cookieForMonster = [], cookieForMonsterChoc = [], monsterAngry = [];
+var monsterMoveDirX = [], monsterMoveDirY = [];
+var legMove = 0;
+
+//flash light vars
+var light, flashlight, flashlight_head, flashlight_button, moon, crater, crater_shade, background, road;
+var lightShade = [];
+
+
+
+
+
+//monster var-s   
+var body = [], leg1= [], leg2= [], leg3= [], leftEar= [], rightEar= [], nose= [], mouth= [], mouth_red= [], leftEye= [], rightEye= [], inner_leftEye= [], inner_rightEye= [], rightEyebrow= [],  leftEyebrow= [], teeth= [];
+
+//batman logo
+var batmanLogo1, batmanLogo2, batmanLogo3, rightRing1, rightRing2, leftRing1, leftRing2, upLeftRing1, upLeftRing2, head;
+    
+var iCount = 0, counter = 0, ct = 0;
+var txt, txt2, speedInfo, distanceInfo, bottomRect, bottomRect2,nextRoundText, nextRoundText_;
+var distance = 0.0;
+var timeLeft = TIME_OF_GAME;
+var prevPos = w/2;
+var dontFearBarriers = false;
+var manualX = 10; var manualY = 50;
+var roundNum = 1;
+
+//car vars
+var carBody, hideCarTop, carLeftSide, carRightSide, carTop, carBack, carTire = [], moveX = w/2;;
+var road_line = [], barrier, barrier_line = [];
+
+// tree vars
+var treeBody =[], treeHead =[];
+
+var roundOneComplete = false;
+var skew = 0, breakCarIter = 0;
+
+function start(){
+    
+    mainSetup();
+    changeRound(roundNum);
+    createMoon();
+    engineRun();
+    mouseClickMethod(click);
+     
+}
+
+function engineRun(){
+    var frameRate = 90; // speed of iteration
+
+	if (roundNum == 2) {
+	    if (canMove == true){
+	        moveRoad();
+	    }
+	}
+	    
+	var waitTime = (1000/frameRate);
+    setTimeout(engineRun, waitTime);
+}
+
+function mainSetup(){
+    
+    background = new Rectangle(w, h);
+    background.setColor(BACKGROUND_COLOR);
+    add(background);
+    
+    bottomRect = new Rectangle(w, 100 - LIGHT_RADIUS);
+    bottomRect.setPosition (0, h-100 + LIGHT_RADIUS);
+    bottomRect.setColor("#01579b");
+    add(bottomRect);
+    
+    
+    txt = new Text(MONSTER_NUM + " monster(s) left", "8pt Arial");
+    txt.setColor(Color.white);
+    txt.setPosition(5,h-10);
+    add(txt);
+    
+    txt2 = new Text(timeLeft + " seconds left", "8pt Arial");
+    txt2.setColor(Color.white);
+    txt2.setPosition(5,h-30);
+    add(txt2);
+    
+    println("for instant second round - PRESS '9'");
+}
+
+function firstRoundSetup(){
+    
+    createLightShade();
+    
+    light = new Circle(LIGHT_RADIUS);
+    light.setPosition(w/2, h/2);
+    light.setColor(FLASHLIGHT_COLOR);
+    add(light);
+    
+    
+    flashlight = new Rectangle(20, 50);
+    flashlight.setColor(Color.black);
+    flashlight.setPosition(w/2 - 10, h - 50);
+    add(flashlight);
+    
+    
+    flashlight_head = new Rectangle(30, 20);
+    flashlight_head.setColor("#696969");
+    flashlight_head.setPosition(w/2 - 15, h - 70);
+    add(flashlight_head);
+    
+    flashlight_button = new Circle(5);
+    flashlight_button.setColor(Color.red);
+    flashlight_button.setPosition(w/2, h - 30);
+    add(flashlight_button);
+    
+
+    
+    nextRoundText = new Text("Round 1. Give cookies to monsters", "12pt Arial");
+    nextRoundText.setPosition((w - nextRoundText.getWidth())/2 - 70,  50);
+    nextRoundText.setColor(Color.white);
+    add(nextRoundText); 
+    
+}
+
+function secondRoundSetup(){
+    
+    remove(moon);
+   // moon.setColor(Color.yellow);
+   // add(moon);
+    
+    var sun = new Circle(MOON_RADIUS);
+    sun.setColor(BACKGROUND_COLOR_ALT);
+    sun.setPosition(w-MOON_RADIUS, MOON_RADIUS);
+    add(sun);
+     
+    background.setColor(BACKGROUND_COLOR_ALT);
+        
+    road = new Rectangle(200, h);
+    road.setPosition(w/2-100, 0);
+    road.setColor("#A9A9A9");
+    add(road);
+    
+    remove(bottomRect);
+    bottomRect = new Rectangle((w - road.getWidth())/2, 100 - LIGHT_RADIUS);
+    bottomRect.setPosition (0, 100 - LIGHT_RADIUS*2);
+    bottomRect.setColor("#01579b"); 
+    add(bottomRect);
+    
+
+    bottomRect2 = new Rectangle((w - road.getWidth())/2, 100 - LIGHT_RADIUS);
+    bottomRect2.setPosition (w-road.getWidth()/2, 100 - LIGHT_RADIUS*2);
+    bottomRect2.setColor("#01579b"); 
+    add(bottomRect2);
+    
+    
+    var road_left_line = new Rectangle(10, h);
+    road_left_line.setPosition(w/2-95, 0);
+    road_left_line.setColor("#F2CD55");
+    add(road_left_line);
+    
+    var road_right_line = new Rectangle(10, h);
+    road_right_line.setPosition(w/2+85, 0);
+    road_right_line.setColor("#F2CD55");
+    add(road_right_line);
+    
+    for (var i = 0; i < 8; i++) {
+        road_line[i] = new Rectangle(10, 30);
+        road_line[i].setPosition(w/2 - 5, i * 100);
+        road_line[i].setColor("#F2CD55");
+        add(road_line[i]);
+    }
+    createCar();
+    createTrees(NUM_OF_TREES, 0);
+
+
+    
+    remove(txt);
+    txt = new Text("Speed", "15pt Arial");
+    txt.setColor(Color.gray);
+    txt.setPosition(w - txt.getWidth() - 20,20);
+    add(txt);
+    
+    
+    remove(txt2);
+    txt2 = new Text("Distance", "15pt Arial");
+    txt2.setColor(Color.gray);
+    txt2.setPosition(10, 20);
+    add(txt2);
+    
+    
+    speedInfo = new Text("0 km/h", "17pt Arial");
+    speedInfo.setColor(Color.white);
+    speedInfo.setPosition(w-speedInfo.getWidth()- 30,45);
+    add(speedInfo);
+    
+
+    distanceInfo = new Text("0 km", "15pt Arial");
+    distanceInfo.setColor(Color.white);
+    distanceInfo.setPosition(5, 45);
+    add(distanceInfo);
+    
+}
+
+function changeRound(roundNum){
+    
+    if (roundNum == 1) {
+        firstRoundSetup();
+      //  drawMonster();
+        setTimer(moveMonster,50);
+        mouseClickMethod(click);
+
+        setTimer(moveFlashManual,10);
+        mouseMoveMethod(moveFlash);
+        setTimer(gameTimer, 1000);
+        keyDownMethod(secCode);
+	}
+
+    //remove objects from  round 1
+    
+	if (roundNum == 2) {
+	    
+	    for (var i = -15; i <= 15; i++){   
+            remove(lightShade[i]);
+        }
+        
+        for (var i = 0; i < MONSTER_NUM; i++){
+            removeMonsters(i);    
+        }
+        
+        remove(light);
+        remove(flashlight);
+        remove(flashlight_head);
+        remove(flashlight_button);
+        remove(moon);
+    
+        setTimer(pauseTime, 50);
+        
+        
+	    secondRoundSetup();
+	    keyDownMethod(moveCar);
+	    keyUpMethod(tireTurnEffect);
+	    canMove = true;
+	    engineRun();
+	  //  add(nextRoundText);
+	}
+}
+
+function pauseTime(){
+	   //crater.move(1,0);
+	   
+	   if(ct == 15){
+		    stopTimer(pauseTime);
+		    ct = 0;
+	   }
+    ct++;
+}
+
+function createMoon() {
+    moon = new Circle(MOON_RADIUS);
+    moon.setPosition(w - MOON_RADIUS - 10, MOON_RADIUS + 10);
+    moon.setColor(MOON_COLOR);
+    add(moon);
+
+    createCrater(6/10, 30, 30);
+    createCrater(9/10, -30, 30);
+    createCrater(6/10, -17, -30);
+    createCrater(7/10,  20, 10);
+    createCrater(8/10, -40,-4);
+    createCrater(5/10, -7, -7);
+    createCrater(11/10, 20, -20);
+}
+
+function createTrees(numTrees, startFrom){
+    
+    for (var i = startFrom; i < numTrees + startFrom; i++){
+        
+        var chooseSide = Randomizer.nextBoolean();
+        
+        var xPos =  chooseSide ? Randomizer.nextInt(5, 80) : Randomizer.nextInt(w - 80, w-5);
+        var yPos = Randomizer.nextInt(-150-h, -150);
+        var treeHeadRadius = Randomizer.nextInt(5, 50);
+        var treeBodyX = treeHeadRadius * 1/2;
+        var treeBodyY = treeHeadRadius * 2;
+    
+        treeBody[i] = new Rectangle(treeBodyX,treeBodyY);
+        treeBody[i].setColor("#765c48");
+        treeBody[i].setPosition(xPos-treeBody[i].getWidth()/2,yPos);
+        add(treeBody[i]);
+        
+        treeHead[i] = new Circle(treeHeadRadius);
+        treeHead[i].setColor("#42692f");
+        treeHead[i].setPosition(xPos,yPos);
+        add(treeHead[i]);
+    }
+    
+    
+    remove(bottomRect);
+    remove(bottomRect2);
+    remove(txt);
+    remove(txt2);
+
+    
+    add(bottomRect);
+    add(bottomRect2);
+    add(txt);
+    add(txt2);
+    
+    // speedInfo = new Text(carSpeed * 20 + " km/h");
+    // speedInfo.setColor(Color.white);
+    // speedInfo.setPosition(w-speedInfo.getWidth()- 30,h - 7);
+    // add(speedInfo);
+    
+    if (tempDistInfo == null) {
+        var tempDistInfo = ""
+        var tempSpeedInfo = ""
+        var tempSpeedInfoX = w - 95;
+
+    }else{
+        var tempDistInfo = distanceInfo.getLabel();
+        var tempSpeedInfo = speedInfo.getLabel();  
+        var tempSpeedInfoX = speedInfo.getX();
+    }
+    
+    
+    remove(speedInfo);
+    remove(distanceInfo);
+    
+    distanceInfo = new Text(tempSpeedInfo, "15pt Arial");
+    distanceInfo.setColor(Color.white);
+    distanceInfo.setPosition(5, 45)
+    add(distanceInfo);
+    
+    
+    speedInfo = new Text(tempSpeedInfo, "15pt Arial");
+    speedInfo.setColor(Color.white);
+    speedInfo.setPosition(tempSpeedInfoX,45);
+    add(speedInfo);
+
+}
+
+function moveRoad(){
+    for (var i = 0; i < 8; i++) {
+        if (road_line[i].getY() > h - 10) {
+            road_line[i].setPosition(w/2 - 5, -90);
+        }  
+        road_line[i].setPosition(w/2 - 5, road_line[i].getY() + carSpeed);
+    }
+    
+    if (barrier == null){
+        createBarrier();
+    }
+    
+    for (var i = 0; i < 1; i++) {
+        barrier.setPosition(barrier.getX(), barrier.getY() + carSpeed);
+        for (var i = 0; i < 3; i++){
+            barrier_line[i].setPosition(barrier_line[i].getX(), barrier_line[i].getY() + carSpeed);
+        }
+    }
+    
+    if (barrier.getY() > h || barrier == null){
+        remove(barrier);
+        createBarrier();
+    }
+    
+    
+    
+    for (var i = 0; i < NUM_OF_TREES; i++){
+        treeHead[i].setPosition(treeHead[i].getX(), treeHead[i].getY() + carSpeed);
+        treeBody[i].setPosition(treeBody[i].getX(), treeBody[i].getY() + carSpeed);
+        
+        if (treeHead[i].getY()-treeHead[i].getRadius() > h){
+            remove(treeHead[i]);
+            if (carSpeed * 20 < 80){
+                createTrees(1, i);
+            }
+        }
+    }
+    
+
+    
+    
+    distanceMeter();
+    //if crashed in barier
+    
+    // car left upper corner
+     var carTouchesBarrier =  (carBody.getX() > barrier.getX() 
+       && carBody.getX() < barrier.getX() + barrier.getWidth() 
+       && carBody.getY() > barrier.getY()
+       && carBody.getY() < barrier.getY() + barrier.getHeight())
+       ||
+    // car right upper corner
+          (carBody.getX() + carBody.getWidth() > barrier.getX() 
+       && carBody.getX() + carBody.getWidth() < barrier.getX() + barrier.getWidth() 
+       && carBody.getY() > barrier.getY()
+       && carBody.getY() < barrier.getY() + barrier.getHeight())
+       ||
+    // car left lower corner
+          (carBody.getX() > barrier.getX() 
+       && carBody.getX() < barrier.getX() + barrier.getWidth() 
+       && carBody.getY() + carBody.getHeight() > barrier.getY()
+       && carBody.getY() + carBody.getHeight() < barrier.getY() + barrier.getHeight())
+       ||
+    // car right lower corner
+          (carBody.getX() + carBody.getWidth() > barrier.getX() 
+       && carBody.getX() + carBody.getWidth() < barrier.getX() + barrier.getWidth() 
+       && carBody.getY() + carBody.getHeight() > barrier.getY()
+       && carBody.getY() + carBody.getHeight() < barrier.getY() + barrier.getHeight())
+    
+    if (carTouchesBarrier &&  !dontFearBarriers){
+          canMove = false;
+          setTimer(breakCar, 10);
+    }
+}
+
+function moveFlash(e){
+
+    var x = e.getX();
+    var y = e.getY();
+    
+    if (y >= h - 100){
+        var y = h - 100;
+    }
+  
+        
+    if (canMove){
+        if (x != null || y != null){
+            light.setPosition(x, y);
+            updateLightShade(x, y);
+        }
+        
+        var chg = prevPos - x;
+        var reX =  - chg / 6;
+        
+        prevPos = x;
+        
+        flashlight.rotate(reX);
+        flashlight_head.setPosition(w/2 + (x - w/2) /14 - 15, flashlight.getY()-10);
+        flashlight_head.rotate(reX);
+        flashlight_button.rotate(reX);
+        
+        var elem = getElementAt(x, y);
+
+        for (var i = 0; i < MONSTER_NUM; i++){ 
+            removeBatmanLogo();
+            
+            var checkMonster = 
+             ( elem == body[i]
+            || elem == leg1[i]  
+            || elem == leg2[i]
+            || elem == leg3[i]
+            || elem == leftEar[i]
+            || elem == rightEar[i]
+            || elem == body[i]
+            || elem == nose[i]
+            || elem == rightEyebrow[i]
+            || elem == leftEyebrow[i]
+            || elem == rightEye[i]
+            || elem == leftEye[i]
+            || elem == inner_leftEye[i]
+            || elem == inner_rightEye[i])
+
+                
+            if(checkMonster && monsterCanMove[i]){
+                mouth[i].setColor(Color.black);
+                mouth_red[i].setColor(Color.red);
+                leg1[i].setColor(Color.black);  
+                leg2[i].setColor(Color.black);
+                leg3[i].setColor(Color.black);
+                leftEar[i].setColor(Color.black);
+                rightEar[i].setColor(Color.black);
+                body[i].setColor(monsterColor[i]);
+                nose[i].setColor(Color.black);
+                rightEyebrow[i].setColor(Color.black);
+                leftEyebrow[i].setColor(Color.black);
+                rightEye[i].setColor(Color.black);
+                leftEye[i].setColor(Color.black);
+                inner_leftEye[i].setColor(Color.red);
+                inner_rightEye[i].setColor(Color.white);
+                teeth[i].setColor(Color.white);
+            }else if(!checkMonster && monsterCanMove[i]){
+                
+                teeth[i].setColor(BACKGROUND_COLOR);
+                body[i].setColor(BACKGROUND_COLOR);
+                leg1[i].setColor(BACKGROUND_COLOR);  
+                leg2[i].setColor(BACKGROUND_COLOR);
+                leg3[i].setColor(BACKGROUND_COLOR);
+                mouth[i].setColor(BACKGROUND_COLOR);
+                mouth_red[i].setColor(BACKGROUND_COLOR);
+                leftEar[i].setColor(BACKGROUND_COLOR);
+                rightEar[i].setColor(BACKGROUND_COLOR);
+                body[i].setColor(BACKGROUND_COLOR);
+                nose[i].setColor(BACKGROUND_COLOR);
+                rightEyebrow[i].setColor(BACKGROUND_COLOR);
+                leftEyebrow[i].setColor(BACKGROUND_COLOR);
+                rightEye[i].setColor(BACKGROUND_COLOR);
+                leftEye[i].setColor(BACKGROUND_COLOR);
+                inner_leftEye[i].setColor(BACKGROUND_COLOR);
+                inner_rightEye[i].setColor(BACKGROUND_COLOR);
+            }
+        }
+    }
+}
+
+function moveFlashManual(){
+    
+    manualX++;
+    manualY++;
+    
+    light.setPosition(manualX, manualY);
+    updateLightShade(manualX, manualY);
+    
+    
+    var chg = prevPos - manualX;
+    
+    prevPos = manualX;
+    
+    var x =  - chg / 6;
+    
+    flashlight.rotate(x);
+    flashlight_head.setPosition(w/2 + (manualX - w/2) /14 - 15, flashlight.getY()-10);
+    flashlight_head.rotate(x);
+    flashlight_button.rotate(x);
+    
+    counter++;
+    
+    if(counter==TIMER_ITERATION && !canMove){
+        stopTimer(moveFlashManual);
+        remove(nextRoundText);
+        counter = 0;
+        manualX = 10;
+        manualY = 50;
+        drawBatmanLogo();
+        
+        
+        if (!roundOneComplete){
+            drawMonster();
+            canMove = true;
+        }else {
+            nextRoundText.setText("Click to continiue");  
+            add(nextRoundText);
+        }
+    }    
+}
+
+function createBarrier(){
+    
+    barrier = new Rectangle(70, 30);
+    var x = Randomizer.nextInt(road.getX(), road.getX() + road.getWidth() - barrier.getWidth());
+        
+    barrier.setPosition(x, -barrier.getHeight());
+    if (dontFearBarriers){
+        barrier.setColor(Color.green);
+    }else{
+        barrier.setColor(Color.red);
+    }
+    
+    add(barrier);
+    
+    for (var i = 0; i < 3; i++){
+        barrier_line[i] = new Rectangle(10, 30);
+        barrier_line[i].setPosition(x + i * 20 + 10, -barrier.getHeight());
+        barrier_line[i].setColor(Color.white);
+        add(barrier_line[i]);
+    
+        barrier_line[i].rotate(45);
+    }
+}
+
+function createLightShade(){
+    for (var i = -15; i <= 15; i++){   
+        lightShade[i] = new Line(w/2, h - 40, w/2 - 2 * LIGHT_RADIUS * (i) / 30, h/2);
+        lightShade[i].setColor("#FFFACD");
+        add(lightShade[i]);
+    }
+}
+
+function updateLightShade(x, y){
+    for (var i = -15; i <= 15; i++){   
+        lightShade[i].setEndpoint(x - 2 * LIGHT_RADIUS * (i) / 30, y);
+    }
+}
+
+function createCrater(size, xOffset, yOffset){
+    
+    crater = new Circle(size * CRATER_RADIUS);
+    crater.setPosition(w - MOON_RADIUS + xOffset, MOON_RADIUS + yOffset);
+    crater.setColor(MOON_CRATER_COLOR);
+    add(crater);
+      
+    crater_shade = new Circle(size * CRATER_RADIUS * 5/7);
+    crater_shade.setPosition(w - MOON_RADIUS + xOffset, MOON_RADIUS + yOffset);
+    crater_shade.setColor(MOON_CRATER_SHADE_COLOR);
+    add(crater_shade);
+}
+
+function drawBatmanLogo(){
+
+    batmanLogo1 = new Oval(120,70);
+    batmanLogo1.setPosition(w/2, h/2);
+    batmanLogo1.setColor(Color.black);
+    add(batmanLogo1);
+    
+    batmanLogo2 = new Oval(110,60);
+    batmanLogo2.setPosition(w/2, h/2);
+    batmanLogo2.setColor(Color.yellow);
+    add(batmanLogo2);
+    
+    
+    batmanLogo3 = new Oval(100,50);
+    batmanLogo3.setPosition(w/2, h/2);
+    batmanLogo3.setColor(Color.black);
+    add(batmanLogo3);
+    
+    rightRing1 = new Oval(14,20);
+    rightRing1.setPosition(w/2 + 20, h/2 + 20);
+    rightRing1.setColor(Color.yellow);
+    add(rightRing1);
+    rightRing1.rotate(50);
+    
+    rightRing2 = new Oval(14,20);
+    rightRing2.setPosition(w/2 + 7, h/2 + 20);
+    rightRing2.setColor(Color.yellow);
+    add(rightRing2);
+    rightRing2.rotate(30);
+    
+    leftRing1 = new Oval(14,20);
+    leftRing1.setPosition(w/2 - 20, h/2 + 20);
+    leftRing1.setColor(Color.yellow);
+    add(leftRing1);
+    leftRing1.rotate(-50);
+    
+    leftRing2 = new Oval(14,20);
+    leftRing2.setPosition(w/2 - 7, h/2 + 20);
+    leftRing2.setColor(Color.yellow);
+    add(leftRing2);
+    leftRing2.rotate(-30);
+
+    
+    upLeftRing1 = new Oval(20,30);
+    upLeftRing1.setPosition(w/2 - 18, h/2 - 14);
+    upLeftRing1.setColor(Color.yellow);
+    add(upLeftRing1);
+    upLeftRing1.rotate(20);
+    
+    upLeftRing2 = new Oval(20,30);
+    upLeftRing2.setPosition(w/2 + 18, h/2 - 14);
+    upLeftRing2.setColor(Color.yellow);
+    add(upLeftRing2);
+    upLeftRing2.rotate(-20);
+    
+    
+    head = new Rectangle(6,10);
+    head.setColor(Color.yellow);
+    head.setPosition(w/2-3, h/2-25);
+    add(head);
+}
+
+function removeBatmanLogo(){
+    if (batmanLogo1 != null){
+        remove(batmanLogo1);
+        remove(batmanLogo2);
+        remove(batmanLogo3);
+        
+        remove(rightRing1);
+        remove(rightRing2);
+        remove(leftRing1);
+        remove(leftRing2);
+        remove(upLeftRing1);
+        remove(upLeftRing2);
+        remove(head);
+    }
+}
+
+function gameTimer(){
+    
+    timeLeft--;
+    txt2.setText(timeLeft + " seconds left")
+    
+    if(timeLeft == 0){
+        stopTimer(gameTimer);
+        var endText = new Text("Time is out! Game Over");
+        endText.setColor("#e33434");
+        endText.setPosition((w - endText.getWidth())/2, h/2 - 100);
+        add(endText);
+        remove(txt2);
+        canMove = false;
+        setTimer(pauseTime, 50);
+        return 0;
+    }
+}
+
+function distanceMeter(){
+    distance = distance + carSpeed;
+    if (distance % 500 == 0){
+        carSpeed = carSpeed + 1/4;
+        remove(nextRoundText);
+        remove(nextRoundText_);
+    }    
+    
+    
+    if (distance  == 100000){
+        breakCar();
+    }    
+    
+    
+     
+    distShow = distance/ 100
+    speedInfo.setText(carSpeed * 20 + " km/h");
+    distanceInfo.setText(distShow.toFixed(1) + " m");
+}
+
+function gameExit(){
+    canMove = false;
+   // setTimer(moveFlashManual,10);
+}
+
+function tireTurnEffect(e){
+    if(canMove && leftOrRightPressed){
+        carTire[0].rotate(-turnDir * 20);
+        carTire[2].rotate(-turnDir * 20);
+        
+        carTire[1].rotate(-turnDir * 5);
+        carTire[3].rotate(-turnDir * 5);
+        
+        
+        carTire[1].setPosition(carTire[1].getX() + turnDir, carTire[1].getY());
+        carTire[3].setPosition(carTire[3].getX() + turnDir, carTire[3].getY());
+
+        
+        carBody.rotate(-turnDir * 5);
+        carTop.rotate(-turnDir * 5);
+        carBack.rotate(-turnDir * 5);
+        carLeftSide.rotate(-turnDir * 5);
+        carRightSide.rotate(-turnDir * 5);
+        hideCarTop.rotate(-turnDir * 5);
+    }
+    
+    longPressHandler = 1;
+    leftOrRightPressed = false;
+}
+
+function moveCar(e){
+    
+    var moveToSide = 0;
+    
+    if (canMove){    
+        if (e.keyCode == Keyboard.LEFT || e.keyCode == Keyboard.letter("A")) {
+    		moveToSide = 15 + carSpeed * 2;
+    		moveX -= 15 + carSpeed*2;
+    		turnDir = -1;
+    		leftOrRightPressed = true;
+        }
+        
+        if (e.keyCode == Keyboard.RIGHT || e.keyCode == Keyboard.letter("D")) {
+            moveToSide = 15 + carSpeed * 2;
+    		moveX += 15 + carSpeed*2;
+    		turnDir = 1;
+            leftOrRightPressed = true;
+        }
+        
+        if (leftOrRightPressed){
+
+            
+            carTire[0].setPosition(moveX-1, h/2+157);
+            carTire[1].setPosition(moveX-1, h/2+180);
+            carTire[2].setPosition(moveX+21, h/2+157);
+            carTire[3].setPosition(moveX+21, h/2+180);
+            
+            
+            carTire[0].rotate(longPressHandler * turnDir * 20);
+            carTire[2].rotate(longPressHandler * turnDir * 20);
+            
+            carTire[1].rotate(longPressHandler * turnDir * 5);
+            carTire[3].rotate(longPressHandler * turnDir * 5);
+            
+
+            carTire[1].setPosition(carTire[1].getX() - turnDir, carTire[1].getY());
+            carTire[3].setPosition(carTire[3].getX() - turnDir, carTire[3].getY());
+
+            
+            carBody.rotate(longPressHandler * turnDir * 5);
+            carTop.rotate(longPressHandler * turnDir * 5);
+            carBack.rotate(longPressHandler * turnDir * 5);
+            carLeftSide.rotate(longPressHandler * turnDir * 5);
+            carRightSide.rotate(longPressHandler * turnDir * 5);
+            hideCarTop.rotate(longPressHandler * turnDir * 5);
+            
+            carBody.setPosition(carBody.getX() + moveToSide * turnDir, carBody.getY());
+            carTop.setPosition(carTop.getX() + moveToSide * turnDir, carTop.getY());
+            carBack.setPosition(carBack.getX() + moveToSide * turnDir, carBack.getY());
+            carLeftSide.setPosition(carLeftSide.getX() + moveToSide * turnDir, carLeftSide.getY());
+            carRightSide.setPosition(carRightSide.getX() + moveToSide * turnDir, carRightSide.getY());
+            hideCarTop.setPosition(hideCarTop.getX() + moveToSide * turnDir, hideCarTop.getY());
+            
+            
+        }
+        
+        if (carTire[0].getX() < road.getX() - 15){
+            skew = -2;
+            setTimer(breakCar, 10);
+        }
+        
+        if (carTire[2].getX() > road.getX() + road.getWidth() + 15){
+            skew = 2;
+            setTimer(breakCar, 10);
+        }
+        
+        longPressHandler = 0;
+    }
+    
+    
+    if(e.keyCode == Keyboard.letter("K") && roundNum == 2){
+        dontFearBarriers = true;
+        carBody.setColor(Color.red);
+        barrier.setColor(Color.green);
+    }
+    
+}
+
+function secCode(e){
+    if(e.keyCode == Keyboard.letter("9") && roundNum == 1){
+        stopTimer(gameTimer);
+        roundNum = 2;
+        changeRound(roundNum);
+    }
+}
+
+function breakCar(){
+    if (!dontFearBarriers){
+            canMove = false;
+            //carBody.setPosition(carBody.getX(), carBody.getY());
+                        
+            carTire[0].setPosition(carTire[0].getX() + Randomizer.nextInt(-2,1) + skew, carTire[0].getY() - Randomizer.nextInt(1,3));
+            carTire[1].setPosition(carTire[1].getX() + Randomizer.nextInt(-2,1) + skew, carTire[1].getY() - Randomizer.nextInt(1,3));
+            carTire[2].setPosition(carTire[2].getX() + Randomizer.nextInt(-1,2) + skew, carTire[2].getY() - Randomizer.nextInt(1,3));
+            carTire[3].setPosition(carTire[3].getX() + Randomizer.nextInt(-1,2) + skew, carTire[3].getY() - Randomizer.nextInt(1,3));
+        
+            //carTop.setPosition(carTop.getX() + Randomizer.nextInt(-1,2) + skew, carTop.getY() - Randomizer.nextInt(1,3));
+            
+            if (skew != 0){
+                carBody.setPosition(carBody.getX() + Randomizer.nextInt(-1,2) + skew, carBody.getY() - Randomizer.nextInt(1,3));
+            }
+            
+            var endText = new Text("Car accident", "14pt Arial");
+            endText.setPosition((w - endText.getWidth())/2, h/2 - 150);
+            endText.setColor("#e33434");
+            add(endText);
+            
+            var endText = new Text("Game Over", "24pt Arial");
+            endText.setPosition((w - endText.getWidth())/2, h/2 - 120);
+            endText.setColor("#e33434");
+            add(endText);
+            
+            
+            var txt = new Text("Distance");
+            txt.setPosition((w - txt.getWidth()) / 2, 200)
+            txt.setColor("#202020");
+            add(txt);
+            
+            
+            var txt = new Text(distShow.toFixed(1) + " m");
+            txt.setPosition((w - txt.getWidth()) / 2, 230)
+            txt.setColor("#202020");
+            add(txt);
+            
+            if (distShow > 411){
+                var txt = new Text("You beat my record :(");
+                txt.setPosition((w - txt.getWidth()) / 2, 300)
+                txt.setColor("#1370c5");
+                add(txt);
+            }else{
+                var txt = new Text("You couldn't beat my record :)");
+                txt.setPosition((w - txt.getWidth()) / 2, 300)
+                txt.setColor("#1370c5");
+                add(txt);
+            }
+    
+    breakCarIter++;
+    
+    if (breakCarIter > 30) {
+        stopTimer(breakCar);
+    }
+}
+}
+
+function createCar(){
+    
+    carTire[0] = new Rectangle(5, 10);
+    carTire[0].setColor(Color.black);
+    carTire[0].setPosition(moveX-1, h/2+ 157);
+    add(carTire[0]);
+    
+    carTire[1] = new Rectangle(5, 10);
+    carTire[1].setColor(Color.black);
+    carTire[1].setPosition(moveX-1, h/2+185);
+    add(carTire[1]);
+    
+    carTire[2] = new Rectangle(5, 10);
+    carTire[2].setColor(Color.black);
+    carTire[2].setPosition(moveX+21, h/2+157);
+    add(carTire[2]);
+    
+    carTire[3] = new Rectangle(5, 10);
+    carTire[3].setColor(Color.black);
+    carTire[3].setPosition(moveX+21, h/2+185);
+    add(carTire[3]);
+    
+    carBody  = new Rectangle(25, 50);
+    carBody.setColor("#34558b");
+    carBody.setPosition(moveX, h/2 + 150);
+    add(carBody);
+
+    carTop = new Arc(20, 60, 120, 0);
+    carTop.setColor(Color.gray);
+    carTop.setPosition(moveX + 12, h/2+182);
+    add(carTop);
+    
+    carBack = new Arc(20, 240, -60, 0);
+    carBack.setColor(Color.gray);
+    carBack.setPosition(moveX + 12, h/2+173);
+    add(carBack);
+
+    hideCarTop = new Rectangle(20, 18);
+    hideCarTop.setColor("#34558b");
+    hideCarTop.setPosition(moveX + 3, h/2+169);
+    add(hideCarTop);
+    
+    carRightSide = new Arc(13, 90+165, 110+160, 0);
+    carRightSide.setColor(Color.gray);
+    carRightSide.setPosition(moveX+22, h/2 + 170);
+    add(carRightSide);
+    
+    carLeftSide = new Arc(13, 70+200, 90+195, 0);
+    carLeftSide.setColor(Color.gray);
+    carLeftSide.setPosition(moveX+3, h/2 + 170);
+    add(carLeftSide);
+    
+    nextRoundText = new Text("Round 2", "25pt Arial");
+    nextRoundText.setColor(BACKGROUND_COLOR);
+    nextRoundText.setPosition((w - nextRoundText.getWidth())/2, h / 2 - 100)
+    add(nextRoundText);
+    
+    
+    nextRoundText_ = new Text("beat my record 411m", "15pt Arial");
+    nextRoundText_.setColor("#e33434");
+    nextRoundText_.setPosition((w - nextRoundText_.getWidth())/2, h / 2 - 80)
+    add(nextRoundText_);
+}
+
+function click(e){
+     
+    var x = e.getX();
+    var y = e.getY();
+    
+    if (roundNum == 1 && roundOneComplete){
+        roundNum = 2;
+        changeRound(roundNum);
+    }
+    
+    if(roundNum == 1 && canMove){ 
+        for (var i = 0; i < MONSTER_NUM; i++){
+            if (x > body[i].getX() - body[i].getRadius() - 20 && x < body[i].getX() + body[i].getRadius() + 20 && y > body[i].getY() - body[i].getRadius() - 20 && y < body[i].getY() + body[i].getRadius() + 20){  
+                if(monsterAngry[i]){
+                    var x = mouth[i].getX();
+                    var y = mouth[i].getY();
+                    
+                    removeMonsters(i);
+                    
+                    add(leg1[i]);
+                    add(leg2[i]);
+                    add(leg3[i]);
+                    add(teeth[i]);
+                    add(leftEar[i]);
+                    add(rightEar[i]);
+                    add(body[i]);
+                    add(nose[i]);
+                    add(rightEyebrow[i]);
+                    add(leftEyebrow[i]);
+                    add(rightEye[i]);
+                    add(leftEye[i]);
+                    add(inner_leftEye[i]);
+                    add(inner_rightEye[i]);
+        
+                    body[i].setColor(monsterColor[i]);
+                    
+                    mouth[i] = new Arc(15, -180, 360, 0);
+                    mouth[i].setColor(Color.black);
+                    mouth[i].setPosition(x + 10, y);
+                    add(mouth[i]);
+                    
+                    leftEye[i].setColor(Color.white);
+                    rightEye[i].setColor(Color.white);
+                    inner_leftEye[i].setColor(Color.blue);
+                    inner_rightEye[i].setColor(Color.blue);
+                    
+                    
+                    mouth_red[i] = new Arc(8, -180, 360, 0);
+                    mouth_red[i].setColor(Color.red);
+                    mouth_red[i].setPosition(x + 10, y);
+                    add(mouth_red[i]);
+                    add(teeth[i]);
+                    
+                    giveCookieToMonster(x, y, i);
+                                        
+                    monsterAngry[i] = false;
+                    monsterCanMove[i] = false;
+                    
+                    iCount++;
+                    if (MONSTER_NUM - iCount ==  1){
+                        txt.setText(MONSTER_NUM - iCount + " monster left");
+                    }else{
+                        txt.setText(MONSTER_NUM - iCount + " monsters left");
+                    }
+                }
+                    
+                    leftEyebrow[i].rotate(-30,0);
+                    rightEyebrow[i].rotate(30,0);
+
+                    break;
+            }
+        }  
+    
+
+        
+        
+        if (iCount == MONSTER_NUM){
+            txt.setText("all monster got a cookie in " + (timeLeft) + " seconds :)");
+            setTimer(moveFlashManual,10);
+            add(txt);
+            //setTimer(pauseTime, 1000);
+            canMove = false;
+            roundOneComplete = true;
+            stopTimer(gameTimer);
+            
+            for (var i = 0; i < MONSTER_NUM; i++){
+                removeMonsters(i);
+                remove(cookieForMonster[i]);
+                for (var j = 0; j < 6; j++){
+                    remove(cookieForMonsterChoc[i* 6 + j]);
+                }
+            }
+        }
+    }
+}
+
+function giveCookieToMonster(xPos, yPos, monsterNum){
+    
+    cookieForMonster[monsterNum] = new Circle(10);
+    cookieForMonster[monsterNum].setPosition(xPos, yPos);
+    cookieForMonster[monsterNum].setColor("#BD8C61");
+    add(cookieForMonster[monsterNum]);
+    
+    var x = cookieForMonster[monsterNum].getX() + Randomizer.nextInt(-5,5);
+    var y = cookieForMonster[monsterNum].getY() + Randomizer.nextInt(-5,5);
+     
+    for (var j = 1; j < 6; j++){
+         cookieForMonsterChoc[monsterNum * 6 + j] = new Circle(Randomizer.nextInt(1,2));
+         cookieForMonsterChoc[monsterNum * 6 + j].setPosition(x + Randomizer.nextInt(-4,4)  , y+ Randomizer.nextInt(-4,4));
+         cookieForMonsterChoc[monsterNum * 6 + j].setColor("#270D0B");
+         add(cookieForMonsterChoc[monsterNum * 6 + j]);
+    }
+}
+   
+function drawMonster(){
+    
+    for (var i = 0; i < MONSTER_NUM; i++){
+        
+        monsterColor[i] = Randomizer.nextColor();
+        monsterCanMove[i] = true;
+        
+        monsterMoveDirX[i] =  Randomizer.nextInt(-MONSTER_SPEED, MONSTER_SPEED);
+        monsterMoveDirY[i] =  Randomizer.nextInt(-MONSTER_SPEED, MONSTER_SPEED);
+        
+        if (monsterMoveDirX[i] == 0){
+            monsterMoveDirX[i] = MONSTER_SPEED;
+        }
+        if (monsterMoveDirY[i] == 0){
+            monsterMoveDirY[i] = -MONSTER_SPEED;
+        }
+        
+        leg1[i] = new Line(w/2, h/2, w/2 - 20, h/2 + 35);
+        leg1[i].setColor(Color.black);
+        leg1[i].setLineWidth(6);
+        add(leg1[i]);
+        
+        leg2[i] = new Line(w/2, h/2, w/2 +3, h/2 + 40);
+        leg2[i].setColor(Color.black);
+        leg2[i].setLineWidth(6);
+        add(leg2[i]);
+        
+        leg3[i] = new Line(w/2, h/2, w/2 + 30, h/2 + 35);
+        leg3[i].setColor(Color.black);
+        leg3[i].setLineWidth(6);
+        add(leg3[i]);
+        
+        leftEar[i] = new Line(w/2, h/2, w/2 - 15, h/2 - 35);
+        leftEar[i].setColor(Color.black);
+        leftEar[i].setLineWidth(10);
+        add(leftEar[i]);
+        
+        rightEar[i] = new Line(w/2, h/2, w/2 + 15, h/2 - 35);
+        rightEar[i].setColor(Color.black);
+        rightEar[i].setLineWidth(10);
+        add(rightEar[i]);
+        
+        
+        body[i] = new Circle(30);
+        body[i].setColor(monsterColor[i]);
+        body[i].setPosition(w/2,h/2);
+        add(body[i]);
+        
+        nose[i] = new Line(w/2, h/2, w/2, h/2 + 10);
+        nose[i].setColor(Color.black);
+        nose[i].setLineWidth(6);
+        add(nose[i]);
+        
+    
+        mouth[i] = new Rectangle(20, 10);
+        mouth[i].setColor(Color.black);
+        mouth[i].setPosition(w/2 - 10, h/2 + 15);
+        add(mouth[i]);
+        
+        mouth_red[i] = new Rectangle(16, 5);
+        mouth_red[i].setColor(Color.red);
+        mouth_red[i].setPosition(w/2 - 8, h/2 + 15);
+        add(mouth_red[i]);
+        
+        
+        teeth[i] = new Rectangle(5, 8);
+        teeth[i].setColor(Color.white);
+        teeth[i].setPosition(w/2 + Randomizer.nextInt(-10,10), h/2 + 15);
+        add(teeth[i]);
+    
+    
+        rightEyebrow[i] = new Rectangle(16, 5);
+        rightEyebrow[i].setColor(Color.black);
+        rightEyebrow[i].setPosition(w/2 + 8, h/2 - 23);
+        add(rightEyebrow[i]);
+        rightEyebrow[i].rotate(-30,0);
+        
+        leftEyebrow[i] = new Rectangle(16,5);
+        leftEyebrow[i].setColor(Color.black);
+        leftEyebrow[i].setPosition(w/2 - 23, h/2 - 23);
+        add(leftEyebrow[i]);
+        leftEyebrow[i].rotate(30,0);
+        
+        leftEye[i] = new Circle(10);
+        leftEye[i].setColor(Color.black);
+        leftEye[i].setPosition(w/2 - 10,h/2 - 10);
+        add(leftEye[i]);
+        
+        rightEye[i] = new Circle(10);
+        rightEye[i].setColor(Color.black);
+        rightEye[i].setPosition(w/2 + 10,h/2 - 10);
+        add(rightEye[i]);
+        
+        inner_leftEye[i] = new Circle(5);
+        inner_leftEye[i].setColor(Color.randomRed());
+        inner_leftEye[i].setPosition(w/2 - 10,h/2 - 10);
+        add(inner_leftEye[i]);
+        
+        inner_rightEye[i] = new Circle(5);
+        inner_rightEye[i].setColor(Color.white);
+        inner_rightEye[i].setPosition(w/2 + 10,h/2 - 10);
+        add(inner_rightEye[i]);
+        
+        monsterAngry[i] = true;
+    }    
+}
+
+function removeMonsters(monsterID){
+    var i = monsterID;
+    
+        remove(mouth[i]);
+        remove(mouth_red[i]);
+        remove(teeth[i]);
+        remove(body[i])
+        remove(leg1[i]);
+        remove(leg2[i]);
+        remove(leg3[i]);
+        remove(leftEar[i]);
+        remove(rightEar[i]);
+        remove(nose[i]);
+        remove(rightEyebrow[i]);
+        remove(leftEyebrow[i]);
+        remove(rightEye[i]);
+        remove(leftEye[i]);
+        remove(inner_leftEye[i])
+        remove(inner_rightEye[i])
+}
+
+function moveMonster(){
+    
+    legMove++;
+
+    for (var i = 0; i < MONSTER_NUM; i++){    
+        if (monsterCanMove[i]){
+            //leg movement
+            if (legMove % 6 == 0) {
+                leg1[i].setEndpoint(leg1[i].getEndX() +10 , leg1[i].getEndY() );
+            }
+            
+            if (legMove % 6 == 1) {
+                leg2[i].setEndpoint(leg2[i].getEndX() -6 , leg2[i].getEndY());
+            }
+            
+            if (legMove % 6 == 2) {
+                leg3[i].setEndpoint(leg3[i].getEndX() - 10, leg3[i].getEndY());
+            }
+            
+            if (legMove % 6 == 3) {
+                leg1[i].setEndpoint(leg1[i].getEndX()-10 , leg1[i].getEndY());
+            }
+            
+            if (legMove % 6 == 4) {
+                leg2[i].setEndpoint(leg2[i].getEndX() + 6 , leg2[i].getEndY());
+            }
+            
+            if (legMove % 6 == 5) {
+                leg3[i].setEndpoint(leg3[i].getEndX() + 10, leg3[i].getEndY());
+            }
+            
+            
+            //real reposition
+            if (body[i].getY() + body[i].getRadius() > h - 100){
+                monsterMoveDirY[i] = -MONSTER_SPEED;
+            }
+            
+            if (body[i].getX() + body[i].getRadius() > w){
+                monsterMoveDirX[i] = -MONSTER_SPEED;
+            }
+            
+            if (body[i].getX() - body[i].getRadius() < 0){
+                monsterMoveDirX[i] = MONSTER_SPEED;
+            }
+            
+            if (body[i].getY()- body[i].getRadius() < 0){
+                monsterMoveDirY[i] = MONSTER_SPEED;
+            }
+            
+            leg1[i].setPosition(leg1[i].getX()+monsterMoveDirX[i], leg1[i].getY() + monsterMoveDirY[i]);
+            leg1[i].setEndpoint(leg1[i].getEndX()+monsterMoveDirX[i], leg1[i].getEndY()+ monsterMoveDirY[i]);
+            
+            
+            leg2[i].setPosition(leg2[i].getX()+monsterMoveDirX[i], leg2[i].getY()+ monsterMoveDirY[i]);
+            leg2[i].setEndpoint(leg2[i].getEndX()+monsterMoveDirX[i], leg2[i].getEndY()+ monsterMoveDirY[i]);
+            
+            leg3[i].setPosition(leg3[i].getX()+monsterMoveDirX[i], leg3[i].getY()+ monsterMoveDirY[i]);
+            leg3[i].setEndpoint(leg3[i].getEndX()+monsterMoveDirX[i], leg3[i].getEndY()+ monsterMoveDirY[i]);
+        
+            leftEar[i].setPosition(leftEar[i].getX()+monsterMoveDirX[i], leftEar[i].getY()+ monsterMoveDirY[i]);
+            leftEar[i].setEndpoint(leftEar[i].getEndX()+monsterMoveDirX[i], leftEar[i].getEndY()+ monsterMoveDirY[i]);
+            
+            rightEar[i].setPosition(rightEar[i].getX()+monsterMoveDirX[i], rightEar[i].getY()+ monsterMoveDirY[i]);
+            rightEar[i].setEndpoint(rightEar[i].getEndX()+monsterMoveDirX[i], rightEar[i].getEndY()+ monsterMoveDirY[i]);
+            
+            nose[i].setPosition(nose[i].getX() +monsterMoveDirX[i], nose[i].getY()+ monsterMoveDirY[i]);
+            nose[i].setEndpoint(nose[i].getEndX()+monsterMoveDirX[i], nose[i].getEndY()+ monsterMoveDirY[i]);
+            
+            
+            body[i].setPosition(body[i].getX() +monsterMoveDirX[i], body[i].getY()+ monsterMoveDirY[i]);
+            mouth[i].setPosition(mouth[i].getX() +monsterMoveDirX[i], mouth[i].getY()+ monsterMoveDirY[i]);
+            mouth_red[i].setPosition(mouth_red[i].getX() +monsterMoveDirX[i], mouth_red[i].getY()+ monsterMoveDirY[i]);
+            leftEye[i].setPosition(leftEye[i].getX() +monsterMoveDirX[i], leftEye[i].getY()+ monsterMoveDirY[i]);
+            rightEye[i].setPosition(rightEye[i].getX() +monsterMoveDirX[i], rightEye[i].getY()+ monsterMoveDirY[i]);
+            inner_leftEye[i].setPosition(inner_leftEye[i].getX() +monsterMoveDirX[i], inner_leftEye[i].getY()+ monsterMoveDirY[i]);
+            inner_rightEye[i].setPosition(inner_rightEye[i].getX() +monsterMoveDirX[i], inner_rightEye[i].getY()+ monsterMoveDirY[i]);
+            
+            leftEyebrow[i].setPosition(leftEyebrow[i].getX() +monsterMoveDirX[i], leftEyebrow[i].getY()+ monsterMoveDirY[i]);
+            rightEyebrow[i].setPosition(rightEyebrow[i].getX() +monsterMoveDirX[i], rightEyebrow[i].getY()+ monsterMoveDirY[i]);
+            teeth[i].setPosition(teeth[i].getX() +monsterMoveDirX[i], teeth[i].getY()+ monsterMoveDirY[i]);
+        }   
+    }
+}
